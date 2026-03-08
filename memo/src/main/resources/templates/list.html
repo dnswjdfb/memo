@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>메모 목록</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Georgia', serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ffd1dc 0%, #ffb6d9 50%, #e8b5ce 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(255, 182, 193, 0.4) 0%, transparent 50%),
+                    radial-gradient(circle at 40% 40%, rgba(255, 218, 224, 0.3) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #fff, transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkle 3s infinite;
+        }
+
+        .sparkle:nth-child(1) { top: 10%; left: 15%; animation-delay: 0s; }
+        .sparkle:nth-child(2) { top: 20%; right: 20%; animation-delay: 0.5s; }
+        .sparkle:nth-child(3) { bottom: 15%; left: 25%; animation-delay: 1s; }
+        .sparkle:nth-child(4) { bottom: 25%; right: 15%; animation-delay: 1.5s; }
+        .sparkle:nth-child(5) { top: 50%; left: 10%; animation-delay: 2s; }
+        .sparkle:nth-child(6) { top: 40%; right: 10%; animation-delay: 2.5s; }
+
+        .container {
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(255, 240, 245, 0.95));
+            width: 100%;
+            max-width: 900px;
+            max-height: 85vh;
+            padding: 50px 40px;
+            border-radius: 30px;
+            box-shadow:
+                    0 20px 60px rgba(255, 182, 193, 0.4),
+                    0 0 0 1px rgba(255, 255, 255, 0.8) inset,
+                    0 8px 16px rgba(0, 0, 0, 0.1);
+            position: relative;
+            animation: float 6s ease-in-out infinite;
+            border: 3px solid rgba(255, 192, 203, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container::before {
+            content: '✨';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            animation: sparkle 2s infinite;
+        }
+
+        .container::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ffc0cb, #ffb6d9, #e8b5ce, #ffc0cb);
+            border-radius: 30px;
+            z-index: -1;
+            opacity: 0.5;
+            filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #c66b8a;
+            font-size: 32px;
+            font-weight: normal;
+            text-shadow: 2px 2px 4px rgba(255, 182, 193, 0.3);
+            letter-spacing: 2px;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        h1::before,
+        h1::after {
+            content: '♔';
+            position: absolute;
+            color: #f4a5c1;
+            font-size: 24px;
+        }
+
+        h1::before {
+            left: 50%;
+            transform: translateX(-120px);
+            top: 50%;
+            margin-top: -12px;
+        }
+
+        h1::after {
+            right: 50%;
+            transform: translateX(120px);
+            top: 50%;
+            margin-top: -12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 12px;
+        }
+
+        .table-wrapper {
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex: 1;
+            margin: 0 -10px;
+            padding: 0 10px;
+        }
+
+        .table-wrapper::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-track {
+            background: linear-gradient(135deg, #fff0f5 0%, #ffe4e9 100%);
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #ffb6d9 0%, #ffc0cb 100%);
+            border-radius: 10px;
+            border: 2px solid #fff0f5;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #ff9ec8 0%, #ffb6d9 100%);
+        }
+
+        thead {
+            background: linear-gradient(135deg, #ffb6d9 0%, #ffc0cb 100%);
+            color: white;
+        }
+
+        thead th {
+            padding: 18px 15px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        thead th:first-child {
+            border-radius: 15px 0 0 15px;
+        }
+
+        thead th:last-child {
+            border-radius: 0 15px 15px 0;
+        }
+
+        tbody tr {
+            background: linear-gradient(135deg, #fff0f5 0%, #ffe4e9 100%);
+            transition: all 0.3s ease;
+            animation: slideIn 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        tbody tr:nth-child(1) { animation-delay: 0.1s; }
+        tbody tr:nth-child(2) { animation-delay: 0.2s; }
+        tbody tr:nth-child(3) { animation-delay: 0.3s; }
+        tbody tr:nth-child(4) { animation-delay: 0.4s; }
+        tbody tr:nth-child(5) { animation-delay: 0.5s; }
+
+        tbody tr:hover {
+            background: linear-gradient(135deg, #ffe4e9 0%, #ffd1dc 100%);
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 8px 20px rgba(255, 182, 193, 0.4);
+        }
+
+        tbody td {
+            padding: 18px 15px;
+            color: #c66b8a;
+            text-align: center;
+            border: 2px solid transparent;
+            font-size: 14px;
+        }
+
+        tbody tr td:first-child {
+            border-radius: 15px 0 0 15px;
+            font-weight: 600;
+        }
+
+        tbody tr td:last-child {
+            border-radius: 0 15px 15px 0;
+        }
+
+        tbody td:nth-child(1) {
+            width: 60px;
+            font-weight: bold;
+            color: #f4a5c1;
+        }
+
+        tbody td:nth-child(2) {
+            width: 120px;
+            font-weight: 600;
+        }
+
+        tbody td:nth-child(3) {
+            text-align: left;
+            font-style: italic;
+        }
+
+        tbody td:nth-child(4) {
+            width: 180px;
+            white-space: nowrap;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .delete-link {
+            color: #c66b8a;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 10px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ffe4e9 0%, #ffd1dc 100%);
+            border: 1px solid rgba(255, 192, 203, 0.3);
+            display: inline-block;
+            transition: all 0.3s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .delete-link:hover {
+            background: linear-gradient(135deg, #ffb6d9 0%, #ffc0cb 100%);
+            color: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 182, 193, 0.5);
+        }
+
+        .update-link {
+            color: #c66b8a;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 10px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #e4f5ff 0%, #d1e8ff 100%);
+            border: 1px solid rgba(173, 216, 230, 0.5);
+            display: inline-block;
+            transition: all 0.3s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .update-link:hover {
+            background: linear-gradient(135deg, #b6d9ff 0%, #c0d8ff 100%);
+            color: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(173, 216, 230, 0.5);
+        }
+
+        .decorative-border {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            border-radius: 30px;
+            pointer-events: none;
+        }
+
+        .decorative-border::before,
+        .decorative-border::after {
+            content: '◆';
+            position: absolute;
+            color: #f4a5c1;
+            font-size: 20px;
+            opacity: 0.6;
+        }
+
+        .decorative-border::before {
+            top: 15px;
+            left: 15px;
+        }
+
+        .decorative-border::after {
+            bottom: 15px;
+            right: 15px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 11px;
+            color: #d4a5b8;
+            font-style: italic;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sparkle"></div>
+<div class="sparkle"></div>
+<div class="sparkle"></div>
+<div class="sparkle"></div>
+<div class="sparkle"></div>
+<div class="sparkle"></div>
+
+<div class="container">
+    <div class="decorative-border"></div>
+    <h1>📋 메모 목록</h1>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+            <tr>
+                <th>번호</th>
+                <th>작성자</th>
+                <th>메모 내용</th>
+                <th>관리</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="list:${dto}">
+                <td th:text="${list.idx}">1</td>
+                <td th:text="${list.writer}">작성자</td>
+                <td th:text="${list.memo}">메모 내용입니다.</td>
+                <td>
+                    <div class="action-buttons">
+                        <a th:href="@{'/update/' + ${list.idx}}" class="update-link">✏️ 수정</a>
+                        <a th:href="@{'/delete/' + ${list.idx}}" class="delete-link">🗑️ 삭제</a>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        ♡ 2026 Memo Application ♡
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>메모 작성</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Georgia', serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ffd1dc 0%, #ffb6d9 50%, #e8b5ce 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(255, 182, 193, 0.4) 0%, transparent 50%),
+                    radial-gradient(circle at 40% 40%, rgba(255, 218, 224, 0.3) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #fff, transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkle 3s infinite;
+        }
+
+        .sparkle:nth-child(1) { top: 10%; left: 15%; animation-delay: 0s; }
+        .sparkle:nth-child(2) { top: 20%; right: 20%; animation-delay: 0.5s; }
+        .sparkle:nth-child(3) { bottom: 15%; left: 25%; animation-delay: 1s; }
+        .sparkle:nth-child(4) { bottom: 25%; right: 15%; animation-delay: 1.5s; }
+        .sparkle:nth-child(5) { top: 50%; left: 10%; animation-delay: 2s; }
+        .sparkle:nth-child(6) { top: 40%; right: 10%; animation-delay: 2.5s; }
+
+        .container {
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(255, 240, 245, 0.95));
+            width: 100%;
+            max-width: 600px;
+            padding: 50px 40px;
+            border-radius: 30px;
+            box-shadow:
+                    0 20px 60px rgba(255, 182, 193, 0.4),
+                    0 0 0 1px rgba(255, 255, 255, 0.8) inset,
+                    0 8px 16px rgba(0, 0, 0, 0.1);
+            position: relative;
+            animation: float 6s ease-in-out infinite;
+            border: 3px solid rgba(255, 192, 203, 0.3);
+        }
+
+        .container::before {
+            content: '✨';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            animation: sparkle 2s infinite;
+        }
+
+        .container::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ffc0cb, #ffb6d9, #e8b5ce, #ffc0cb);
+            border-radius: 30px;
+            z-index: -1;
+            opacity: 0.5;
+            filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #c66b8a;
+            font-size: 32px;
+            font-weight: normal;
+            text-shadow: 2px 2px 4px rgba(255, 182, 193, 0.3);
+            letter-spacing: 2px;
+            position: relative;
+        }
+
+        h1::before,
+        h1::after {
+            content: '♔';
+            position: absolute;
+            color: #f4a5c1;
+            font-size: 24px;
+        }
+
+        h1::before {
+            left: 50%;
+            transform: translateX(-120px);
+            top: 50%;
+            margin-top: -12px;
+        }
+
+        h1::after {
+            right: 50%;
+            transform: translateX(120px);
+            top: 50%;
+            margin-top: -12px;
+        }
+
+        form {
+            animation: slideIn 0.6s ease forwards;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #c66b8a;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid rgba(255, 192, 203, 0.3);
+            border-radius: 15px;
+            font-family: 'Georgia', serif;
+            font-size: 14px;
+            color: #c66b8a;
+            background: linear-gradient(135deg, #fff0f5 0%, #ffe4e9 100%);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        textarea:focus {
+            border-color: #ffb6d9;
+            background: linear-gradient(135deg, #ffe4e9 0%, #ffd1dc 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 182, 193, 0.3);
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #d4a5b8;
+            font-style: italic;
+        }
+
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #ffb6d9 0%, #ffc0cb 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Georgia', serif;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 20px rgba(255, 182, 193, 0.4);
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #ff9ec8 0%, #ffb6d9 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(255, 182, 193, 0.5);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .decorative-border {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            border-radius: 30px;
+            pointer-events: none;
+        }
+
+        .decorative-border::before,
+        .decorative-border::after {
+            content: '◆';
+            position: absolute;
+            color: #f4a5c1;
+            font-size: 20px;
+            opacity: 0.6;
+        }
+
+        .decorative-border::before {
+            top: 15px;
+            left: 15px;
+        }
+
+        .decorative-border::after {
+            bottom: 15px;
+            right: 15px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 11px;
+            color: #d4a5b8;
+            font-style: italic;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 40px 30px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            h1::before {
+                transform: translateX(-100px);
+            }
+
+            h1::after {
+                transform: translateX(100px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sparkle"></div>
+<div class="sparkle"></div>
+<div class="sparkle"></div>
+<div class="sparkle"></div>
+<div class="sparkle"></div>
+<div class="sparkle"></div>
+
+<div class="container">
+    <div class="decorative-border"></div>
+    <h1>📝 메모 작성</h1>
+
+    <form action="wr" method="post">
+        <div class="form-group">
+            <label for="writer">작성자</label>
+            <input type="text" id="writer" name="writer" placeholder="작성자 이름을 입력하세요">
+        </div>
+
+        <div class="form-group">
+            <label for="memo">메모 내용</label>
+            <textarea id="memo" name="memo" placeholder="메모 내용을 입력하세요..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="id">메모 ID</label>
+            <input type="text" id="id" name="id" placeholder="메모 ID를 입력하세요">
+        </div>
+
+        <div class="form-group">
+            <label for="pw">메모 비밀번호</label>
+            <input type="password" id="pw" name="pw" placeholder="메모 비밀번호를 입력하세요">
+        </div>
+
+        <button type="submit">
+            <span>✨ 작성완료 ✨</span>
+        </button>
+    </form>
+
+    <div class="footer">
+        ♡ 2026 Memo Application ♡
+    </div>
+</div>
+
+</body>
+</html>

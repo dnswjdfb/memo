@@ -1,0 +1,24 @@
+DROP TABLE IF EXISTS memo2;
+DROP TABLE IF EXISTS memo;
+DROP SEQUENCE IF EXISTS seq_idx;
+
+CREATE SEQUENCE seq_idx START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE memo (
+    idx INT PRIMARY KEY,
+    id VARCHAR(100),
+    name VARCHAR(100),
+    pw VARCHAR(100),
+    email VARCHAR(200),
+    writer VARCHAR(100),
+    memo VARCHAR(2000),
+    join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE memo2 (
+    idx INT PRIMARY KEY,
+    memo VARCHAR(2000),
+    writer VARCHAR(100),
+    id VARCHAR(100),
+    pw VARCHAR(100)
+);
