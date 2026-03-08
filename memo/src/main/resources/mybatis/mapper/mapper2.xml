@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.hs.after.memo.dao.memoDAO2">
+    <insert id="insertMemo" parameterType="kr.hs.after.memo.dto.memoDTO2">
+        insert into memo2(idx,memo,writer,id,pw) values (next value for seq_idx,#{memo},#{writer},#{id},#{pw})
+    </insert>
+
+    <select id="select" resultType="kr.hs.after.memo.dto.memoDTO2">
+        select * from memo2
+    </select>
+
+    <delete id="delete" parameterType="kr.hs.after.memo.dto.memoDTO2">
+        delete from memo2 where idx = #{idx}
+    </delete>
+
+    <select id="selectId" resultType="kr.hs.after.memo.dto.memoDTO2">
+        select * from memo2 where id =  #{id}
+    </select>
+
+    <update id="update" parameterType="kr.hs.after.memo.dto.memoDTO2">
+        update memo2 set writer=#{writer}, memo=#{memo} where idx = #{idx}
+    </update>
+</mapper>
